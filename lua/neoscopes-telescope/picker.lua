@@ -112,5 +112,4 @@ local make_dir_picker = function(opts, on_confirm)
 	picker:find()
 end
 
---make_dir_picker({}, function(sel) print(vim.inspect(sel)) end) -- for testing
 return make_dir_picker
