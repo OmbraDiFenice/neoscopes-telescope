@@ -7,6 +7,9 @@ local action_state = require "telescope.actions.state"
 local entry_display = require "telescope.pickers.entry_display"
 local strings = require "plenary.strings"
 
+local hlnamespace_selection = vim.api.nvim_create_namespace("neoscopes-telescope")
+local hlgroup_selected = "TelescopeMultiSelection"
+
 local function linearize_selection_set(selection)
 	local selection_array = {}
 	for path, _ in pairs(selection) do
@@ -95,26 +98,29 @@ local make_dir_picker = function(opts, on_confirm)
 				on_confirm(linearize_selection_set(selection))
 			end)
 			actions.toggle_selection:replace(function()
-				local path = action_state.get_selected_entry().path
+				local entry = action_state.get_selected_entry()
+				local path = entry.path
 				if selection[path] ~= nil then
 					selection[path] = nil
 				else
 					selection[path] = true
 				end
-				picker.previewer:update(selection)
+				picker:update(entry)
 			end)
 			actions.add_selection:replace(function()
-				local path = action_state.get_selected_entry().path
+				local entry = action_state.get_selected_entry()
+				local path = entry.path
 				if selection[path] == nil then
 					selection[path] = true
-					picker.previewer:update(selection)
+					picker:update(entry)
 				end
 			end)
 			actions.remove_selection:replace(function()
-				local path = action_state.get_selected_entry().path
+				local entry = action_state.get_selected_entry()
+				local path = entry.path
 				if selection[path] ~= nil then
 					selection[path] = nil
-					picker.previewer:update(selection)
+					picker:update(entry)
 				end
 			end)
 			actions.select_all:replace(function()
@@ -130,6 +136,17 @@ local make_dir_picker = function(opts, on_confirm)
 			return true
 		end,
 	})
+
+	function picker:update(entry)
+		self.previewer:update(selection)
+
+		local row = self:get_row(entry.index)
+		if selection[entry.path] ~= nil then
+			vim.api.nvim_buf_add_highlight(self.results_bufnr, hlnamespace_selection, hlgroup_selected, row, 0, -1)
+		else
+			vim.api.nvim_buf_clear_namespace(self.results_bufnr, hlnamespace_selection, row, row + 1)
+		end
+	end
 
 	picker:find()
 end
