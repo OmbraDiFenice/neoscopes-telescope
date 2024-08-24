@@ -61,7 +61,7 @@ local make_selection_previewer = function(opts)
 
 	local previewer = previewers.new_buffer_previewer {
 		define_preview = function(self, _, _) set_content(self.state.bufnr, cached_selection) end,
-		title = opts.previewer_title or "Selected Directories",
+		title = opts.previewer_title
 	}
 
 	function previewer:update(selection)
@@ -87,11 +87,8 @@ local make_dir_picker = function(opts, on_confirm)
 		sorter = conf.file_sorter(opts),
 		prompt_title = "Search Scope",
 		results_title = false,
-		layout_strategy = opts.layout_strategy or "center",
-		layout_config = opts.layout_config or {
-			anchor = "N",
-			mirror = true,
-		},
+		layout_strategy = opts.layout_strategy,
+		layout_config = opts.layout_config,
 		attach_mappings = function(prompt_bufnr)
 			actions.select_default:replace(function()
 				actions.close(prompt_bufnr)
