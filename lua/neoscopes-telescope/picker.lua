@@ -17,7 +17,7 @@ end
 local make_dir_finder = function(opts)
 	return finders.new_async_job({
 		command_generator = function(prompt) --return the command broken down in an array + optionally a cwd field and an env field
-			return { "find", "-type", "d", "-iname", "*" .. prompt .. "*", "-not", "-path", "*/.git*", "-print" }
+			return { "find", "-type", "d", "-iname", "*" .. prompt .. "*", "-not", "-path", "*/.git*", "-mindepth", "1", "-printf", "%P\\n" }
 		end,
 		entry_maker = opts.entry_maker or make_entry.gen_from_file(opts),
 		cwd = nil, -- fallback if cwd field is not returned by command_generator
