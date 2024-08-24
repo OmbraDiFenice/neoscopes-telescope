@@ -4,7 +4,8 @@ local previewers = require "telescope.previewers"
 local conf = require("telescope.config").values
 local actions = require "telescope.actions"
 local action_state = require "telescope.actions.state"
-local make_entry = require "telescope.make_entry"
+local entry_display = require "telescope.pickers.entry_display"
+local strings = require "plenary.strings"
 
 local function linearize_selection_set(selection)
 	local selection_array = {}
@@ -15,11 +16,32 @@ local function linearize_selection_set(selection)
 end
 
 local make_dir_finder = function(opts)
+	local folder_icon = ""
+	local displayer = entry_display.create({
+		separator = " ",
+		items = {
+			{ width = strings.strdisplaywidth(folder_icon) },
+			{ remaining = true },
+		},
+	})
+
+	local function make_dir_entry(entry)
+		return {
+			value = entry,
+			ordinal = entry,
+			path = entry,
+			display = displayer({
+				{ folder_icon },
+				{ entry },
+			})
+		}
+	end
+
 	return finders.new_async_job({
 		command_generator = function(prompt) --return the command broken down in an array + optionally a cwd field and an env field
 			return { "find", "-type", "d", "-iname", "*" .. prompt .. "*", "-not", "-path", "*/.git*", "-mindepth", "1", "-printf", "%P\\n" }
 		end,
-		entry_maker = opts.entry_maker or make_entry.gen_from_file(opts),
+		entry_maker = make_dir_entry,
 		cwd = nil, -- fallback if cwd field is not returned by command_generator
 		env = nil, -- fallback if env field is not returned by command_generator
 		writer = nil, -- not supported for async job finders
