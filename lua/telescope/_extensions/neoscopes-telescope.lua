@@ -4,5 +4,7 @@ return require("telescope").register_extension {
   end,
   exports = {
     search_in_scopes = require("neoscopes-telescope").search_in_scopes,
+		build_scope = require("neoscopes-telescope").build_scope,
+		load_scopes = require("neoscopes-telescope").load_scopes
   },
 }

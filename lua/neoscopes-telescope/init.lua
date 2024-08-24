@@ -20,4 +20,28 @@ return {
 			telescope_builtin.find_files(find_opts)
 		end)
 	end,
+
+	build_scope = function(opts)
+		opts = vim.tbl_deep_extend("force", config.default, opts or {})
+
+		return make_picker(opts.picker, function(directories)
+			vim.ui.input({
+				prompt = "Scope name: ",
+			}, function(name)
+				if name == nil or name == "" then return end
+
+				scopes.add({
+					name = name,
+					dirs = directories,
+				})
+
+				scopes_handler.persist_all(opts.scopes)
+			end)
+		end)
+	end,
+
+	load_scopes = function(opts)
+		opts = vim.tbl_deep_extend("force", config.default, opts or {})
+		scopes_handler.load_from_file(opts.scopes)
+	end,
 }
