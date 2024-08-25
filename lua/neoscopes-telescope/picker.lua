@@ -7,25 +7,18 @@ local action_state = require "telescope.actions.state"
 local entry_display = require "telescope.pickers.entry_display"
 local strings = require "plenary.strings"
 
+local entries = require "neoscopes-telescope.entries"
 local scopes = require "neoscopes"
 
 local hlnamespace_selection = vim.api.nvim_create_namespace("neoscopes-telescope")
 local hlgroup_selected = "TelescopeMultiSelection"
-
-local function linearize_selection_set(selection)
-	local selection_array = {}
-	for path, _ in pairs(selection) do
-		table.insert(selection_array, path)
-	end
-	return selection_array
-end
 
 local make_neoscopes_finder = function(opts)
 	local icon = opts.icons.scope
 
 	local function make_neoscope_entry(entry)
 		return {
-			value = { type = "scope", entry = entry },
+			value = entries.Entry:new("scope", entry.name),
 			ordinal = entry.name,
 			path = entry.name,
 			display = icon .. " " .. entry.name,
@@ -55,7 +48,7 @@ local make_dir_finder = function(opts)
 
 	local function make_dir_entry(entry)
 		return {
-			value = { type = "dir", entry = entry },
+			value = entries.Entry:new("dir", entry),
 			ordinal = entry,
 			path = entry,
 			display = displayer({
@@ -108,10 +101,13 @@ local make_compound_finder = function(opts)
 end
 
 local make_selection_previewer = function(opts)
-	local cached_selection = {} -- TODO move this in previewer setup config to put it in self.state once 159b8b79666e17c8de0378d5c9dc1bc8c7afabcf is released (probably starting from 0.1.8)
+	---@type EntrySet
+	local cached_selection = entries.EntrySet:new() -- TODO move this in previewer setup config to put it in self.state once 159b8b79666e17c8de0378d5c9dc1bc8c7afabcf is released (probably starting from 0.1.8)
 
+	---@param bufnr number
+	---@param selection EntrySet
 	local function set_content(bufnr, selection)
-		local content_lines = linearize_selection_set(selection)
+		local content_lines = selection:get_directories()
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content_lines)
 	end
 
@@ -120,6 +116,7 @@ local make_selection_previewer = function(opts)
 		title = opts.previewer_title
 	}
 
+	---@param selection EntrySet
 	function previewer:update(selection)
 		cached_selection = selection
 		set_content(self.state.bufnr, selection)
@@ -132,7 +129,7 @@ local make_dir_picker = function(opts, on_confirm)
 	opts = opts or {}
 	on_confirm = on_confirm or function() end
 
-	local selection = {}
+	local selection = entries.EntrySet:new()
 
 	local picker
 	local previewer = make_selection_previewer(opts)
@@ -148,36 +145,28 @@ local make_dir_picker = function(opts, on_confirm)
 		attach_mappings = function(prompt_bufnr)
 			actions.select_default:replace(function()
 				actions.close(prompt_bufnr)
-				on_confirm(linearize_selection_set(selection))
+				on_confirm(selection:get_directories())
 			end)
 			actions.toggle_selection:replace(function()
-				local entry = action_state.get_selected_entry()
-				if entry == nil then return end
-				local path = entry.path
-				if selection[path] ~= nil then
-					selection[path] = nil
-				else
-					selection[path] = true
-				end
-				picker:update(entry)
+				local telescope_entry = action_state.get_selected_entry()
+				if telescope_entry == nil then return end
+				local entry = telescope_entry.value
+				selection:toggle(entry)
+				picker:update(telescope_entry)
 			end)
 			actions.add_selection:replace(function()
-				local entry = action_state.get_selected_entry()
-				if entry == nil then return end
-				local path = entry.path
-				if selection[path] == nil then
-					selection[path] = true
-					picker:update(entry)
-				end
+				local telescope_entry = action_state.get_selected_entry()
+				if telescope_entry == nil then return end
+				local entry = telescope_entry.value
+				selection:add(entry)
+				picker:update(telescope_entry)
 			end)
 			actions.remove_selection:replace(function()
-				local entry = action_state.get_selected_entry()
-				if entry == nil then return end
-				local path = entry.path
-				if selection[path] ~= nil then
-					selection[path] = nil
-					picker:update(entry)
-				end
+				local telescope_entry = action_state.get_selected_entry()
+				if telescope_entry == nil then return end
+				local entry = telescope_entry.value
+				selection:remove(entry)
+				picker:update(telescope_entry)
 			end)
 			actions.select_all:replace(function()
 				vim.notify("[neoscopes-telescope] select all: operation not supported", vim.log.levels.WARN)
@@ -193,11 +182,11 @@ local make_dir_picker = function(opts, on_confirm)
 		end,
 	})
 
-	function picker:update(entry)
+	function picker:update(telescope_entry)
 		self.previewer:update(selection)
 
-		local row = self:get_row(entry.index)
-		if selection[entry.path] ~= nil then
+		local row = self:get_row(telescope_entry.index)
+		if selection:contains(telescope_entry.value) then
 			vim.api.nvim_buf_add_highlight(self.results_bufnr, hlnamespace_selection, hlgroup_selected, row, 0, -1)
 		else
 			vim.api.nvim_buf_clear_namespace(self.results_bufnr, hlnamespace_selection, row, row + 1)
