@@ -9,6 +9,10 @@ return {
 				anchor = "N",
 				mirror = true,
 			},
+			icons = {
+				dir = "",
+				scope = "󰥨",
+			},
 		},
 		find = {
 		},

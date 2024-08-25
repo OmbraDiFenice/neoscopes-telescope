@@ -21,7 +21,7 @@ local function linearize_selection_set(selection)
 end
 
 local make_neoscopes_finder = function(opts)
-	local icon = "󰥨"
+	local icon = opts.icons.scope
 
 	local function make_neoscope_entry(entry)
 		return {
@@ -44,7 +44,7 @@ local make_neoscopes_finder = function(opts)
 end
 
 local make_dir_finder = function(opts)
-	local icon = ""
+	local icon = opts.icons.dir
 	local displayer = entry_display.create({
 		separator = " ",
 		items = {
