@@ -7,6 +7,8 @@ local action_state = require "telescope.actions.state"
 local entry_display = require "telescope.pickers.entry_display"
 local strings = require "plenary.strings"
 
+local scopes = require "neoscopes"
+
 local hlnamespace_selection = vim.api.nvim_create_namespace("neoscopes-telescope")
 local hlgroup_selected = "TelescopeMultiSelection"
 
@@ -18,23 +20,46 @@ local function linearize_selection_set(selection)
 	return selection_array
 end
 
+local make_neoscopes_finder = function(opts)
+	local icon = "󰥨"
+
+	local function make_neoscope_entry(entry)
+		return {
+			value = { type = "scope", entry = entry },
+			ordinal = entry.name,
+			path = entry.name,
+			display = icon .. " " .. entry.name,
+		}
+	end
+
+	local scope_list = {}
+	for _, scope in pairs(scopes.get_all_scopes()) do
+		table.insert(scope_list, scope)
+	end
+
+	return finders.new_table({
+		results = scope_list,
+		entry_maker = make_neoscope_entry,
+	})
+end
+
 local make_dir_finder = function(opts)
-	local folder_icon = ""
+	local icon = ""
 	local displayer = entry_display.create({
 		separator = " ",
 		items = {
-			{ width = strings.strdisplaywidth(folder_icon) },
+			{ width = strings.strdisplaywidth(icon) },
 			{ remaining = true },
 		},
 	})
 
 	local function make_dir_entry(entry)
 		return {
-			value = entry,
+			value = { type = "dir", entry = entry },
 			ordinal = entry,
 			path = entry,
 			display = displayer({
-				{ folder_icon },
+				{ icon },
 				{ entry },
 			})
 		}
@@ -48,6 +73,37 @@ local make_dir_finder = function(opts)
 		cwd = nil, -- fallback if cwd field is not returned by command_generator
 		env = nil, -- fallback if env field is not returned by command_generator
 		writer = nil, -- not supported for async job finders
+	})
+end
+
+local make_compound_finder = function(opts)
+	local finder_list = {
+		make_dir_finder(opts),
+		make_neoscopes_finder(opts),
+	}
+	local results = {}
+
+	local function add_to_results(finder_results)
+		for _, finder_result in ipairs(finder_results) do
+			table.insert(results, finder_result)
+		end
+	end
+
+	return setmetatable({
+		results = results,
+
+		close = function(self)
+			for _, finder in ipairs(finder_list) do
+				finder:close()
+			end
+		end,
+	}, {
+		__call = function(self, prompt, process_result, process_complete)
+			for _, finder in ipairs(finder_list) do
+				finder(prompt, process_result, process_complete)
+				add_to_results(finder.reuslts or {})
+			end
+		end,
 	})
 end
 
@@ -82,7 +138,7 @@ local make_dir_picker = function(opts, on_confirm)
 	local previewer = make_selection_previewer(opts)
 
 	picker = pickers.new(opts, {
-		finder = make_dir_finder(opts),
+		finder = make_compound_finder(opts),
 		previewer = previewer,
 		sorter = conf.file_sorter(opts),
 		prompt_title = "Search Scope",
@@ -96,6 +152,7 @@ local make_dir_picker = function(opts, on_confirm)
 			end)
 			actions.toggle_selection:replace(function()
 				local entry = action_state.get_selected_entry()
+				if entry == nil then return end
 				local path = entry.path
 				if selection[path] ~= nil then
 					selection[path] = nil
@@ -106,6 +163,7 @@ local make_dir_picker = function(opts, on_confirm)
 			end)
 			actions.add_selection:replace(function()
 				local entry = action_state.get_selected_entry()
+				if entry == nil then return end
 				local path = entry.path
 				if selection[path] == nil then
 					selection[path] = true
@@ -114,6 +172,7 @@ local make_dir_picker = function(opts, on_confirm)
 			end)
 			actions.remove_selection:replace(function()
 				local entry = action_state.get_selected_entry()
+				if entry == nil then return end
 				local path = entry.path
 				if selection[path] ~= nil then
 					selection[path] = nil
