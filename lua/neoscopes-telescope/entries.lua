@@ -26,6 +26,7 @@ end
 ---@field clear function(): nil
 ---@field contains function(entry: Entry): boolean
 ---@field get_directories function(): strin[]
+---@field is_empty() function(): boolean
 
 local EntrySet = {}
 
@@ -88,6 +89,10 @@ function EntrySet:get_directories()
 	local dirs = vim.tbl_keys(dirs_dict)
 	table.sort(dirs)
 	return dirs
+end
+
+function EntrySet:is_empty()
+	return next(self._entries) == nil
 end
 
 return {
