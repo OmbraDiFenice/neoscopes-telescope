@@ -19,6 +19,9 @@ local function get_scope_list()
 end
 
 function ScopePicker:new(opts, on_confirm, on_cancel)
+	on_confirm = on_confirm or function() end
+	on_cancel = on_cancel or function() end
+
 	local default_picker_opts = vim.tbl_deep_extend("force", config.get().picker, {
 		prompt_title = "Select scope",
 	})
