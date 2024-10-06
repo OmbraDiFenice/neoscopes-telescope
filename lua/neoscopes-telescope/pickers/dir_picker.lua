@@ -95,6 +95,8 @@ function DirPicker:new(opts, on_confirm, on_cancel)
 	local cancelled = true
 
 	picker = pickers.new(opts, vim.tbl_deep_extend("force", default_picker_opts, {
+		prompt_title = opts.prompt_title or "Select directories",
+		results_title = opts.results_title or "Directories",
 		finder = make_dir_finder(default_picker_opts, selection),
 		previewer = previewer,
 		sorter = sorters.highlighter_only(default_picker_opts),

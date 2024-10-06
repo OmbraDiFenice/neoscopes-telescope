@@ -21,7 +21,7 @@ local function select_scope_for_search(opts)
 			local all_scopes = neoscopes.get_all_scopes()
 			if all_scopes == nil or #vim.tbl_keys(all_scopes) == 0 then
 				vim.notify("No scope defined, please create one", vim.log.levels.WARN)
-				scope = op.new_scope()
+				scope = op.new_scope({ prompt_title = "Create a new scope" })
 			else
 				vim.notify("No active scope found, please select one", vim.log.levels.WARN)
 				scope = op.select_scope()
@@ -43,7 +43,7 @@ return {
 		local scope = select_scope_for_search(opts)
 		if scope == nil then return end
 
-		require('telescope.builtin').find_files(vim.tbl_extend("force",
+		require('telescope.builtin').find_files(vim.tbl_deep_extend("force",
 		opts.telescope_options or {},
 		{
 			search_dirs = scope.dirs,
@@ -55,7 +55,7 @@ return {
 		local scope = select_scope_for_search(opts)
 		if scope == nil then return end
 
-		require('telescope.builtin').live_grep(vim.tbl_extend("force",
+		require('telescope.builtin').live_grep(vim.tbl_deep_extend("force",
 		opts.telescope_options or {},
 		{
 			search_dirs = vim.tbl_flatten({ scope.dirs, scope.files }), -- use tbl_flatten instead of list_extend to avoid mutating the arguments

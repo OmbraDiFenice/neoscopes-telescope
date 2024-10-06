@@ -16,9 +16,9 @@ M.persist = function()
 	vim.notify("scopes persisted in " .. persist_file, vim.log.levels.INFO)
 end
 
-M.select_scope = a.wrap(1, function(cb)
+M.select_scope = a.wrap(2, function(opts, cb)
 	ScopePicker:new(
-		{ initial_mode = 'normal' },
+		vim.tbl_deep_extend("force", { initial_mode = 'normal' }, opts or {}),
 		cb, cb
 	):find()
 end)
@@ -61,8 +61,8 @@ end)
 --This function is here just because it can be called also from telescope environment
 --but it really belong to scope_mgmt.
 --It MUST be called from within an async context anyway.
-M.new_scope = function()
-	local dirs = M.choose_dir()
+M.new_scope = function(opts)
+	local dirs = M.choose_dir(opts)
 	if dirs == nil then return end
 
 	local scope_name = M.choose_name()

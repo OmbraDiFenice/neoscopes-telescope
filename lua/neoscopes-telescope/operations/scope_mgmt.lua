@@ -3,10 +3,12 @@ local neoscopes = require("neoscopes")
 local a = require("neoscopes-telescope.vendor.async")
 
 return {
-	new_scope = a.sync(0, op.new_scope),
+	new_scope = a.sync(1, op.new_scope),
 
-	delete_scope = a.sync(0, function()
-			local scope = op.select_scope()
+	delete_scope = a.sync(1, function(opts)
+			local scope = op.select_scope(vim.tbl_deep_extend("force", {
+				prompt_title = "Selecte a scope to delete",
+			}, opts or {}))
 			if scope == nil or not op.confirm() then
 				vim.notify("Canceled", vim.log.levels.INFO)
 				return

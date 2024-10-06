@@ -31,6 +31,8 @@ function ScopePicker:new(opts, on_confirm, on_cancel)
 	local cancelled = true
 
 	return pickers.new(opts, vim.tbl_deep_extend("force", default_picker_opts, {
+		prompt_title = opts.prompt_title or "Select a scope",
+		results_title = opts.results_title or "Scopes",
 		finder = finders.new_table({
 			results = scope_list,
 			entry_maker = function(scope)
