@@ -1,10 +1,6 @@
 return require("telescope").register_extension {
-  setup = function(ext_config, config)
+  setup = function(ext_config, telescope_config)
     -- access extension config and user config
   end,
-  exports = {
-    search_in_scopes = require("neoscopes-telescope").search_in_scopes,
-		build_scope = require("neoscopes-telescope").build_scope,
-		load_scopes = require("neoscopes-telescope").load_scopes
-  },
+  exports = require("neoscopes-telescope.operations"),
 }

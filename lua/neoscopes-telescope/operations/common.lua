@@ -49,13 +49,35 @@ M.confirm = a.wrap(1, function(cb)
 	}, cb)
 end)
 
-M.choose_dir = a.wrap(1, function(cb)
-	DirPicker:new({
+M.choose_dir = a.wrap(2, function(opts, cb)
+	DirPicker:new(vim.tbl_extend("force", {
 			initial_mode = 'normal',
 			enable_highlighting = false, -- TODO this feature doesn't work properly
-		},
+		}, opts or {}),
 		cb, cb
 	):find()
 end)
+
+--This function is here just because it can be called also from telescope environment
+--but it really belong to scope_mgmt.
+--It MUST be called from within an async context anyway.
+M.new_scope = function()
+	local dirs = M.choose_dir()
+	if dirs == nil then return end
+
+	local scope_name = M.choose_name()
+	if scope_name == nil then
+		vim.notify("Canceled", vim.log.levels.INFO)
+		return
+	end
+
+	neoscopes.add({
+		dirs = dirs,
+		name = scope_name,
+	})
+	M.persist()
+
+	return neoscopes.get_all_scopes()[scope_name]
+end
 
 return M

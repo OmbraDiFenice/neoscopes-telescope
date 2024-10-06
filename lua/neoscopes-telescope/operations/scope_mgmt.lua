@@ -3,22 +3,7 @@ local neoscopes = require("neoscopes")
 local a = require("neoscopes-telescope.vendor.async")
 
 return {
-	new_scope = a.sync(0, function()
-			local dirs = op.choose_dir()
-			if dirs == nil then return end
-
-			local scope_name = op.choose_name()
-			if scope_name == nil then
-				vim.notify("Canceled", vim.log.levels.INFO)
-				return
-			end
-
-			neoscopes.add({
-				dirs = dirs,
-				name = scope_name,
-			})
-			op.persist()
-	end),
+	new_scope = a.sync(0, op.new_scope),
 
 	delete_scope = a.sync(0, function()
 			local scope = op.select_scope()
