@@ -1,3 +1,4 @@
+local scopes_handler = require("neoscopes-telescope.scopes_handler")
 local config = require("neoscopes-telescope.config")
 local operations = require("neoscopes-telescope.operations")
 
@@ -12,4 +13,6 @@ return {
 
 	file_search = operations.telescope.file_search,
 	grep_search = operations.telescope.grep_search,
+
+	get_last_scope = scopes_handler.get_last_scope,
 }

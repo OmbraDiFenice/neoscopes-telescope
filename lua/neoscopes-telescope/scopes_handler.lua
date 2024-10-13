@@ -1,40 +1,54 @@
+local config = require("neoscopes-telescope.config")
 local scopes = require("neoscopes")
 
 local M = {}
 
-function M.add_and_select(scope, opts)
-	scopes.add(scope)
-	scopes.set_current(scope.name)
-end
+---@param filepath string
+---@param data table
+local function json_write(filepath, data)
+	local json_data = vim.json.encode(data)
 
-function M.persist_all(opts)
-	local json_scopes = vim.json.encode({
-		scopes = vim.tbl_values(scopes.get_all_scopes())
-	})
-
-	local fh, err = io.open(opts.persist_file, "w")
+	local fh, err = io.open(filepath, "w")
 	if err ~= nil then vim.notify(err, vim.log.levels.ERROR) return end
 	assert(fh ~= nil)
 
-	_, err = fh:write(json_scopes)
+	_, err = fh:write(json_data)
 	if err ~= nil then vim.notify(err, vim.log.levels.ERROR) end
 
 	fh:close()
 end
 
-function M.load_from_file(opts)
-	local fh, err = io.open(opts.persist_file, "r")
+---@param filepath string
+---@return table?
+local function json_read(filepath)
+	local fh, err = io.open(filepath, "r")
 	if err ~= nil then vim.notify(err, vim.log.levels.ERROR) return end
 	assert(fh ~= nil)
 
 	local neoscopes_json = fh:read("*a")
 	fh:close()
 
-	local neoscopes_config = vim.json.decode(neoscopes_json)
+	return vim.json.decode(neoscopes_json)
+end
 
-	for _, scope in ipairs(neoscopes_config.scopes) do
-		scopes.add(scope)
+function M.persist_all()
+	local json_scopes = {
+		scopes = vim.tbl_values(scopes.get_all_scopes()),
+	}
+
+	local last_scope = scopes.get_current_scope()
+	if last_scope ~= nil then
+		json_scopes.last_scope = last_scope.name
 	end
+
+	json_write(config.get().scopes.persist_file, json_scopes)
+end
+
+---@return string? -- last used scope, or nil if none was saved
+function M.get_last_scope()
+	local json_scopes = json_read(config.get().scopes.persist_file)
+	if json_scopes == nil then return nil end
+	return json_read(config.get().scopes.persist_file).last_scope
 end
 
 return M
