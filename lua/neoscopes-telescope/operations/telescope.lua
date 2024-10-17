@@ -54,11 +54,13 @@ return {
 		local scope = select_scope_for_search(opts)
 		if scope == nil then return end
 
+		local local_default = {}
 		if opts.dynamic_prompt_title ~= nil then
-			opts.telescope_options.prompt_title = opts.telescope_options.prompt_title or opts.dynamic_prompt_title()
+			local_default.prompt_title = opts.dynamic_prompt_title()
 		end
 
 		require('telescope.builtin').find_files(vim.tbl_deep_extend("force",
+		local_default,
 		opts.telescope_options or {},
 		{
 			search_dirs = scope.dirs,
