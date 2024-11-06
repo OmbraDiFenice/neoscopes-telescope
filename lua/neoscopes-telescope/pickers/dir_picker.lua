@@ -58,6 +58,9 @@ local make_dir_finder = function(opts, selection)
 				"find",
 				"-iname", "*" .. prompt .. "*",
 				"-not", "-path", "*/.git*",
+				"-not", "-path", "*/.mypy_cache*",
+				"-not", "-path", "*/.venv",
+				"-not", "-path", "*/__pycache__*",
 				"-mindepth", "1",
 				"-printf", "%y %P\\n"
 			}
