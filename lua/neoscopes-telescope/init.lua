@@ -7,6 +7,7 @@ return {
 		config.setup(opts)
 	end,
 
+	select_scope = operations.scope_mgmt.select_scope,
 	new_scope = operations.scope_mgmt.new_scope,
 	delete_scope = operations.scope_mgmt.delete_scope,
 	clone_scope = operations.scope_mgmt.clone_scope,
