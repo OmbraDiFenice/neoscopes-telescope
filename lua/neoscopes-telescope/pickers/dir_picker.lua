@@ -16,10 +16,18 @@ local hlnamespace_selection = vim.api.nvim_create_namespace("neoscopes-telescope
 local hlgroup_selected = "Keyword"
 
 local make_dir_finder = function(opts, selection)
-	local icon = opts.icons.dir
+	local function make_entry(entry)
+		local type = entry:sub(1, 1)
+		local path = entry:sub(3)
 
-	local function make_dir_entry(entry)
-		local value = entries.Entry:new("dir", entry)
+		local value
+		if type == "d" then
+			value = entries.Entry:new("dir", path)
+		elseif type == "f" then
+			value = entries.Entry:new("file", path)
+		else
+			return
+		end
 
 		local hl_group = nil
 		if opts.enable_highlighting and selection:contains(value) then
@@ -31,6 +39,7 @@ local make_dir_finder = function(opts, selection)
 			ordinal = entry,
 			path = entry,
 			display = function(e)
+				local icon = opts.icons[e.value.type] or "?"
 				local txt = icon .. ' ' .. e.value.value
 				if hl_group then
 					return txt, { { { 0, #conf.selection_caret + strings.strdisplaywidth(txt) }, hl_group } }
@@ -45,9 +54,15 @@ local make_dir_finder = function(opts, selection)
 
 	return finders.new_async_job({
 		command_generator = function(prompt) --return the command broken down in an array + optionally a cwd field and an env field
-			return { "find", "-type", "d", "-iname", "*" .. prompt .. "*", "-not", "-path", "*/.git*", "-mindepth", "1", "-printf", "%P\\n" }
+			return {
+				"find",
+				"-iname", "*" .. prompt .. "*",
+				"-not", "-path", "*/.git*",
+				"-mindepth", "1",
+				"-printf", "%y %P\\n"
+			}
 		end,
-		entry_maker = make_dir_entry,
+		entry_maker = make_entry,
 		cwd = nil, -- fallback if cwd field is not returned by command_generator
 		env = nil, -- fallback if env field is not returned by command_generator
 		writer = nil, -- not supported for async job finders

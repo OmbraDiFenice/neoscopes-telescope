@@ -6,7 +6,7 @@ local scopes = require "neoscopes"
 
 local Entry = {}
 
----@param type "dir"|"scope"
+---@param type "dir"|"scope"|"file"
 ---@param value string
 ---@return Entry
 function Entry:new(type, value)
@@ -73,7 +73,7 @@ end
 function EntrySet:get_directories()
 	local dirs_dict = {}
 	for _, entry in pairs(self._entries) do
-		if entry.type == "dir" then
+		if entry.type == "dir" or entry.type == "file" then
 			dirs_dict[entry.value] = true
 		elseif entry.type == "scope" then
 			local scope = scopes.get_all_scopes()[entry.value]

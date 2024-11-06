@@ -13,6 +13,7 @@ local defaults = {
 		icons = {
 			dir = "",
 			scope = "󰥨",
+			file = "",
 		},
 	},
 	scopes = {
