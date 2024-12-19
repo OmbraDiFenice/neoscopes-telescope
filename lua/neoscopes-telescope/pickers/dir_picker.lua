@@ -91,7 +91,9 @@ local make_selection_previewer = function(opts)
 	---@param selection EntrySet
 	function previewer:update(selection)
 		cached_selection = selection
-		set_content(self.state.bufnr, selection)
+		if self.state ~= nil then -- might be nil if the previewer is not rendered because of the zoom being too high
+			set_content(self.state.bufnr, selection)
+		end
 	end
 
 	return previewer
