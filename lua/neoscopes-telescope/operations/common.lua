@@ -61,8 +61,15 @@ end)
 --This function is here just because it can be called also from telescope environment
 --but it really belong to scope_mgmt.
 --It MUST be called from within an async context anyway.
+--Passing a list of paths in `opts.dirs` skips the picker for choosing the locations to
+--include in the scope and proceed with asking for the name and persist the new scope
 M.new_scope = function(opts)
-	local dirs = M.choose_dir(opts)
+	local dirs = nil
+	if opts == nil or opts.dirs == nil or #opts.dirs == 0 then
+		dirs = M.choose_dir(opts)
+	else
+		dirs = opts.dirs
+	end
 	if dirs == nil then return end
 
 	local scope_name = M.choose_name()
